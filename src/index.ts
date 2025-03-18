@@ -1,2 +1,6 @@
-export const one = 1
-export const two = 2
+import * as RSE from 'redux-saga/effects';
+import { Simplify } from './Utils';
+
+type A = Simplify<typeof ReduxSaga>
+
+
