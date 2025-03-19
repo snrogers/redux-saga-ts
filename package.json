@@ -6,20 +6,26 @@
     "type": "git",
     "url": "git+https://github.com/wobsoriano/pkg-name.git"
   },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
+  "main": "./index.cjs",
+  "module": "./index.js",
   "devDependencies": {
+    "@eslint/js": "^9.22.0",
     "@types/bun": "^1.2.5",
     "bun-plugin-dts": "^0.3.0",
-    "redux-saga": "^1.3.0"
+    "eslint": "^9.22.0",
+    "expect-type": "^1.2.0",
+    "redux-saga": "^1.3.0",
+    "tsd": "^0.31.2",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.26.1"
   },
   "peerDependencies": {
     "redux-saga": "^1.3.0"
   },
   "exports": {
-    "types": "./dist/index.d.ts",
-    "import": "./dist/index.js",
-    "require": "./dist/index.cjs"
+    "types": "./index.d.ts",
+    "import": "./index.js",
+    "require": "./index.cjs"
   },
   "bugs": "https://github.com/wobsoriano/pkg-name/issues",
   "description": "",
