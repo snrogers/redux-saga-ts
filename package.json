@@ -42,5 +42,8 @@
     "prepublishOnly": "bun run build"
   },
   "type": "module",
-  "types": "./dist/index.d.ts"
+  "types": "./dist/index.d.ts",
+  "dependencies": {
+    "ts-toolbelt": "^9.6.0"
+  }
 }

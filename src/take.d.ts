@@ -1,15 +1,7 @@
 import * as RS from 'redux-saga';
 import * as RSE from 'redux-saga/effects';
 import { ChannelEvent } from './Utils';
-
-type EventLookup<Event extends RS.Action, EventType extends Event['type']> = {
-  [K in EventType]: Event
-}
-
-type SagaGenerator<RT, E extends RSE.Effect = RSE.Effect<any, any>> = Generator<
-  E,
-  RT
->;
+import { EventLookup, SagaGenerator } from './Utils';
 
 
 /**
@@ -60,20 +52,13 @@ type SagaGenerator<RT, E extends RSE.Effect = RSE.Effect<any, any>> = Generator<
 declare interface makeTake {
   <Event extends RS.Action>(): {
     /** Match any action */
-    (pattern: '*'): SagaGenerator<EventType, RSE.TakeEffect>;
+    (pattern: '*'): SagaGenerator<Event, RSE.TakeEffect>;
 
     /** Constraining signature for predicates */
     <Ev extends Event>(fn: (action: Event) => action is Ev): SagaGenerator<Ev, RSE.TakeEffect>;
 
     /** Expansive signature for predicates */
     (fn: (action: Event) => boolean): SagaGenerator<EventType, RSE.TakeEffect>;
-
-    /** Constraining `toString()` signature */
-    <EventType extends Event['type']>(pattern: { toString(): EventType }):
-      SagaGenerator<EventLookup<Event, EventType>, RSE.TakeEffect>;
-
-    /** Expansive toString() signature */
-    (pattern: { toString(): string }): SagaGenerator<EventType, RSE.TakeEffect>;
 
     /** Match single string */
     <EventType extends Event['type']>(pattern: EventType):
@@ -90,6 +75,13 @@ declare interface makeTake {
     /** Fallback expansive signature for strings AND predicates */
     (pattern: [...(EventType | ((action: Event) => boolean))[]]):
       SagaGenerator<EventLookup<Event, EventType>, RSE.TakeEffect>;
+
+    /** Constraining `toString()` signature */
+    <Obj extends { toString: () => ET }>(pattern: Obj):
+      SagaGenerator<EventLookup<Event, ReturnType<Obj['toString']>>, RSE.TakeEffect>;
+
+    /** Expansive toString() signature */
+    (pattern: { toString: () => string }): SagaGenerator<EventType, RSE.TakeEffect>;
 
     /** Constraining signature for Channels */
     <Channel extends RS.Channel>(channel: Channel):
