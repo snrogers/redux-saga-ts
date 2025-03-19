@@ -34,14 +34,13 @@ import { EventLookup, SagaGenerator } from './Utils';
  * If it is a String, the action is matched
  * if action.type === pattern (e.g. take(INCREMENT_ASYNC))
  *
- * - [ ]
+ * - [ ] TODO: Unimplemented
  * If it is an array, each item in the array is matched with
  * aforementioned rules, so the mixed array of strings and function
  * predicates is supported. The most common use case is an array of strings though,
  * so that action.type is matched against all items in the array (e.g. take([INCREMENT, DECREMENT])
  * and that would match either actions of type INCREMENT or DECREMENT).
  *
- * - [ ]
  * The middleware provides a special action END. If you dispatch the END action,
  * then all Sagas blocked on a take Effect will be terminated regardless of the
  * specified pattern. If the terminated Saga has still some forked tasks
