@@ -28,6 +28,9 @@
   ],
   "homepage": "https://github.com/snrogers/trs#readme",
   "license": "MIT",
+  "scripts": {
+    "test:check": "tsc --noEmit && bun test"
+  },
   "type": "module",
   "types": "./src/index.d.ts"
 }
