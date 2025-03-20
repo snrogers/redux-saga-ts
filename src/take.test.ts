@@ -1,9 +1,8 @@
 import { test } from 'bun:test';
 import * as RS from 'redux-saga';
-import { expectTypeOf } from 'expect-type'
+import { Equals } from 'ts-toolbelt/out/Any/Equals';
 
 import { makeTake } from './take';
-import { Equals } from 'ts-toolbelt/out/Any/Equals';
 
 
 test('take()', () => {
@@ -16,7 +15,7 @@ test('take()', () => {
   type Assert<T extends 1> = T;
 
   test('*: match any action', () => {
-    function * _testSaga() {
+    function * testSaga() {
       const take = makeTake<AppAction>();
       const event = yield * take('*');
 
@@ -25,7 +24,7 @@ test('take()', () => {
   })
 
   test('with a type predicate', () => {
-    function * _testSaga() {
+    function * testSaga() {
       const take = makeTake<AppAction>();
       const event = yield * take((action => action.type === 'TEST_ACTION_ONE'));
 
@@ -34,7 +33,7 @@ test('take()', () => {
   })
 
   test('with a string', () => {
-    function * _testSaga() {
+    function * testSaga() {
       const take = makeTake<AppAction>();
       const event = yield * take('TEST_ACTION_ONE');
 
@@ -43,7 +42,7 @@ test('take()', () => {
   })
 
   test('with an array of strings', () => {
-    function * _testSaga() {
+    function * testSaga() {
       const take = makeTake<AppAction>();
       const event = yield * take(['TEST_ACTION_ONE', 'TEST_ACTION_TWO']);
 
@@ -52,7 +51,7 @@ test('take()', () => {
   })
 
   test('with a Channel', () => {
-    function * _testSaga() {
+    function * testSaga() {
       const take = makeTake<AppAction>();
       const channel = RS.channel(RS.buffers.none<AppAction>());
       const event = yield * take(channel);
@@ -62,7 +61,7 @@ test('take()', () => {
   })
 
   test('with a `toString()`-able object', () => {
-    function * _testSaga() {
+    function * testSaga() {
       const take = makeTake<AppAction>();
       const event = yield * take({ toString: () => 'TEST_ACTION_ONE' as const });
 

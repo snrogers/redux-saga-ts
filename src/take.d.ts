@@ -3,6 +3,7 @@ import * as RSE from 'redux-saga/effects';
 import { ChannelEvent } from './Utils';
 import { EventLookup, SagaGenerator } from './Utils';
 
+declare const makeTake: makeTake;
 
 /**
  * take(pattern)
@@ -59,6 +60,8 @@ declare interface makeTake {
     /** Expansive signature for predicates */
     (fn: (action: Event) => boolean): SagaGenerator<EventType, RSE.TakeEffect>;
 
+    // TODO: List of Type Predicates? But its a useless overload!
+
     /** Match single string */
     <EventType extends Event['type']>(pattern: EventType):
       SagaGenerator<EventLookup<Event, EventType>, RSE.TakeEffect>;
@@ -90,5 +93,3 @@ declare interface makeTake {
     (channel: RS.Channel): SagaGenerator<ChannelEvent<Channel>, RSE.TakeEffect>;
   }
 }
-
-declare const makeTake: makeTake;
