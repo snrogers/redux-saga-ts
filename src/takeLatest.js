@@ -1,5 +1,4 @@
 import { takeLatest as _takeLatest } from 'redux-saga/effects';
+import { createWrappedGenerator } from './Utils';
 
-export const makeTakeLatest = () => {
-  return function takeLatest(...args) { return _takeLatest(...args); }
-}
+export const makeTakeLatest = () => createWrappedGenerator(_takeLatest)

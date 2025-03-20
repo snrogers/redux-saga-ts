@@ -1,5 +1,4 @@
 import { takeLeading as _takeLeading } from 'redux-saga/effects';
+import { createWrappedGenerator } from './Utils';
 
-export const makeTakeLeading = () => {
-  return function takeLeading(...args) { return _takeLeading(...args); }
-}
+export const makeTakeLeading = () => createWrappedGenerator(_takeLeading)

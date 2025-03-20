@@ -19,3 +19,9 @@ export type SagaGenerator<RT, E extends RSE.Effect = RSE.Effect<any, any>> = Gen
 export type Simplify<T> = T extends infer U
                           ? { [K in keyof U]: U[K] }
                           : never
+
+/** We'll manually type everything so who cares the type, we just need to
+ *  be able to import this from other files */
+export function createWrappedGenerator(
+  originalGenerator: any
+): any

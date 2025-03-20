@@ -1,0 +1,960 @@
+<SourceCodeTree>
+  <Directory path="/Users/sebastian/projects/redux-saga-ts">
+    <File path="README.md"><![CDATA[
+          # bun starter
+
+## Getting Started
+
+Click the [Use this template](https://github.com/wobsoriano/bun-lib-starter/generate) button to create a new repository with the contents starter.
+
+OR
+
+Run `bun create wobsoriano/bun-lib-starter ./my-lib`.
+
+## Setup
+
+```bash
+# install dependencies
+bun install
+
+# test the app
+bun test
+
+# build the app, available under dist
+bun run build
+```
+
+## License
+
+MIT
+
+        ]]></File>
+    <File path="package.json"><![CDATA[
+          {
+  "name": "pkg-name",
+  "version": "0.0.0",
+  "module": "./src/index.js",
+  "devDependencies": {
+    "@eslint/js": "^9.22.0",
+    "@types/bun": "^1.2.5",
+    "bun-plugin-dts": "^0.3.0",
+    "eslint": "^9.22.0",
+    "expect-type": "^1.2.0",
+    "redux-saga": "^1.3.0",
+    "tsd": "^0.31.2",
+    "ts-toolbelt": "^9.6.0",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.26.1"
+  },
+  "peerDependencies": {
+    "redux-saga": "^1.3.0"
+  },
+  "exports": {
+    "types": "./src/index.d.ts",
+    "import": "./src/index.js"
+  },
+  "bugs": "https://github.com/snrogers/trs/issues",
+  "description": "",
+  "files": [
+    "dist"
+  ],
+  "homepage": "https://github.com/snrogers/trs#readme",
+  "license": "MIT",
+  "type": "module",
+  "types": "./src/index.d.ts"
+}
+
+        ]]></File>
+    <File path="tsconfig.json"><![CDATA[
+          {
+  "compilerOptions": {
+    "allowJs": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "noEmit": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": false,
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "es2020",
+  }
+}
+
+        ]]></File>
+    <File path="eslint.config.mjs"><![CDATA[
+          // @ts-check
+
+import eslint   from '@eslint/js';
+import tseslint from 'typescript-eslint';
+
+export default tseslint.config(
+  eslint.configs.recommended,
+  tseslint.configs.recommended,
+  {
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+    }
+  }
+);
+
+
+        ]]></File>
+    <File path="src/takeLatest.test.ts"><![CDATA[
+          import { test } from 'bun:test';
+import * as RS from 'redux-saga';
+import { Equals } from 'ts-toolbelt/out/Any/Equals';
+
+import { makeTakeLatest } from './takeLatest';
+
+
+test('takeLatest()', () => {
+  type AppAction1 = { type: 'TEST_ACTION_ONE'; payload: string };
+  type AppAction2 = { type: 'TEST_ACTION_TWO'; payload: number };
+  type AppAction  =
+    | AppAction1
+    | AppAction2;
+
+  type Assert<T extends 1> = T;
+
+  test('*: match any action', () => {
+    function * testSaga() {
+      const takeLatest = makeTakeLatest<AppAction>();
+      const yieldResult = yield * takeLatest(
+        '*',
+        (event: AppAction) => {
+          type assert = Assert<Equals<AppAction, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+
+  test('with a type predicate', () => {
+    function * testSaga() {
+      const takeLatest = makeTakeLatest<AppAction>();
+      const yieldResult = yield * takeLatest(
+        (action => action.type === 'TEST_ACTION_ONE'), (event) => {
+          type assert = Assert<Equals<AppAction1, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+
+  test('with a string', () => {
+    function * testSaga() {
+      const takeLatest = makeTakeLatest<AppAction>();
+      const yieldResult = yield * takeLatest(
+        'TEST_ACTION_ONE',
+        (event) => {
+          type assert = Assert<Equals<AppAction1, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+
+  test('with an array of strings', () => {
+    function * testSaga() {
+      const takeLatest = makeTakeLatest<AppAction>();
+      const yieldResult = yield * takeLatest(
+        ['TEST_ACTION_ONE', 'TEST_ACTION_TWO'],
+        (event) => {
+          type assert = Assert<Equals<AppAction1 | AppAction2, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+
+  test('with a Channel', () => {
+    function * testSaga() {
+      const takeLatest = makeTakeLatest<AppAction>();
+      const channel = RS.channel(RS.buffers.none<AppAction>());
+      const yieldResult = yield * takeLatest(
+        channel,
+        (event) => {
+          type assert = Assert<Equals<AppAction, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+
+  test('with a `toString()`-able object', () => {
+    function * testSaga() {
+      const takeLatest = makeTakeLatest<AppAction>();
+      const yieldResult = yield * takeLatest(
+        { toString: () => 'TEST_ACTION_ONE' as const },
+        (event) => {
+          type assert = Assert<Equals<AppAction1, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+});
+
+        ]]></File>
+    <File path="src/take.test.ts"><![CDATA[
+          import { test } from 'bun:test';
+import * as RS from 'redux-saga';
+import { Equals } from 'ts-toolbelt/out/Any/Equals';
+
+import { makeTake } from './take';
+
+
+test('take()', () => {
+  type AppAction1 = { type: 'TEST_ACTION_ONE'; payload: string };
+  type AppAction2 = { type: 'TEST_ACTION_TWO'; payload: number };
+  type AppAction  =
+    | AppAction1
+    | AppAction2;
+
+  type Assert<T extends 1> = T;
+
+  test('*: match any action', () => {
+    function * testSaga() {
+      const take = makeTake<AppAction>();
+      const event = yield * take('*');
+
+      type assert = Assert<Equals<AppAction, typeof event>>
+    }
+  })
+
+  test('with a type predicate', () => {
+    function * testSaga() {
+      const take = makeTake<AppAction>();
+      const event = yield * take((action => action.type === 'TEST_ACTION_ONE'));
+
+      type assert = Assert<Equals<AppAction1, typeof event>>
+    }
+  })
+
+  test('with a string', () => {
+    function * testSaga() {
+      const take = makeTake<AppAction>();
+      const event = yield * take('TEST_ACTION_ONE');
+
+      type assert = Assert<Equals<AppAction1, typeof event>>
+    }
+  })
+
+  test('with an array of strings', () => {
+    function * testSaga() {
+      const take = makeTake<AppAction>();
+      const event = yield * take(['TEST_ACTION_ONE', 'TEST_ACTION_TWO']);
+
+      type assert = Assert<Equals<AppAction1 | AppAction2, typeof event>>
+    }
+  })
+
+  test('with a Channel', () => {
+    function * testSaga() {
+      const take = makeTake<AppAction>();
+      const channel = RS.channel(RS.buffers.none<AppAction>());
+      const event = yield * take(channel);
+
+      type assert = Assert<Equals<AppAction, typeof event>>
+    }
+  })
+
+  test('with a `toString()`-able object', () => {
+    function * testSaga() {
+      const take = makeTake<AppAction>();
+      const event = yield * take({ toString: () => 'TEST_ACTION_ONE' as const });
+
+      type assert = Assert<Equals<AppAction1, typeof event>>
+    }
+  })
+});
+
+        ]]></File>
+    <File path="src/takeLatest.js"><![CDATA[
+          import { takeLatest as _takeLatest } from 'redux-saga/effects';
+import { createWrappedGenerator } from './Utils';
+
+export const makeTakeLatest = () => createWrappedGenerator(_takeLatest)
+
+        ]]></File>
+    <File path="src/takeLatest.d.ts"><![CDATA[
+          import * as RS from 'redux-saga';
+import * as RSE from 'redux-saga/effects';
+
+import { ChannelEvent } from './Utils';
+import { EventLookup, SagaGenerator } from './Utils';
+
+declare const makeTakeLatest: makeTakeLatest;
+
+type EventDict<Event, EventType> =
+  Event extends { type: EventType }
+    ? Event
+    : never;
+
+declare interface makeTakeLatest {
+  <Event extends RS.Action>(): {
+    /** Match any action */
+    (
+      pattern: '*',
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Constraining signature for predicates */
+    <Ev extends Event>(
+      fn: (action: Event) => action is Ev,
+      fn: (action: Ev) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Expansive signature for predicates */
+    (
+      fn: (action: Event) => boolean,
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    // TODO: List of Type Predicates? But its a useless overload? Is it?
+
+    /** Match single string */
+    <EventType extends Event['type']>(
+      pattern: EventType,
+      fn: (action: EventDict<Event, EventType>) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Match array of strings */
+    <EventType extends Event['type']>(
+      pattern: [...EventType[]],
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Constraining signature for strings AND predicates */
+    <EventType extends Event['type']>(
+      pattern: [...(EventType | ((action: Event) => action is Simplify<Event & { type: EventType }>))[]],
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Fallback expansive signature for strings AND predicates */
+    (
+      pattern: [...(EventType | ((action: Event) => boolean))[]],
+      fn: (action: Event) => SagaGenerator<any, RSES.TAkeLatestEffect>
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Constraining `toString()` signature */
+    <Obj extends { toString: () => Event['type'] }>(
+      pattern: Obj,
+      fn: (action: EventDict<Event, ReturnType<Obj['toString']>>) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Expansive toString() signature */
+    (
+      pattern: { toString: () => string },
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Constraining signature for Channels */
+    <Channel extends RS.Channel>(
+      channel: Channel,
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Fallback expansive signature for Channels */
+    (
+      channel: RS.Channel,
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+  }
+}
+
+
+        ]]></File>
+    <File path="src/takeEvery.test.ts"><![CDATA[
+          import { test } from 'bun:test';
+import * as RS from 'redux-saga';
+import { Equals } from 'ts-toolbelt/out/Any/Equals';
+
+import { makeTakeEvery } from './takeEvery';
+
+
+test('takeLatest()', () => {
+  type AppAction1 = { type: 'TEST_ACTION_ONE'; payload: string };
+  type AppAction2 = { type: 'TEST_ACTION_TWO'; payload: number };
+  type AppAction  =
+    | AppAction1
+    | AppAction2;
+
+  type Assert<T extends 1> = T;
+
+  test('*: match any action', () => {
+    function * testSaga() {
+      const takeLatest = makeTakeEvery<AppAction>();
+      const yieldResult = yield * takeLatest(
+        '*',
+        (event: AppAction) => {
+          type assert = Assert<Equals<AppAction, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+
+  test('with a type predicate', () => {
+    function * testSaga() {
+      const takeLatest = makeTakeEvery<AppAction>();
+      const yieldResult = yield * takeLatest(
+        (action => action.type === 'TEST_ACTION_ONE'), (event) => {
+          type assert = Assert<Equals<AppAction1, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+
+  test('with a string', () => {
+    function * testSaga() {
+      const takeLatest = makeTakeEvery<AppAction>();
+      const yieldResult = yield * takeLatest(
+        'TEST_ACTION_ONE',
+        (event) => {
+          type assert = Assert<Equals<AppAction1, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+
+  test('with an array of strings', () => {
+    function * testSaga() {
+      const takeLatest = makeTakeEvery<AppAction>();
+      const yieldResult = yield * takeLatest(
+        ['TEST_ACTION_ONE', 'TEST_ACTION_TWO'],
+        (event) => {
+          type assert = Assert<Equals<AppAction1 | AppAction2, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+
+  test('with a Channel', () => {
+    function * testSaga() {
+      const takeLatest = makeTakeEvery<AppAction>();
+      const channel = RS.channel(RS.buffers.none<AppAction>());
+      const yieldResult = yield * takeLatest(
+        channel,
+        (event) => {
+          type assert = Assert<Equals<AppAction, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+
+  test('with a `toString()`-able object', () => {
+    function * testSaga() {
+      const takeLatest = makeTakeEvery<AppAction>();
+      const yieldResult = yield * takeLatest(
+        { toString: () => 'TEST_ACTION_ONE' as const },
+        (event) => {
+          type assert = Assert<Equals<AppAction1, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+});
+
+
+        ]]></File>
+    <File path="src/index.js"><![CDATA[
+          export { makeTake } from './take';
+export { makeTakeEvery } from './takeEvery';
+export { makeTakeLatest } from './takeLatest';
+export { makeTakeLeading } from './takeLeading';
+
+        ]]></File>
+    <File path="src/takeLeading.test.ts"><![CDATA[
+          import { test } from 'bun:test';
+import * as RS from 'redux-saga';
+import { Equals } from 'ts-toolbelt/out/Any/Equals';
+
+import { makeTakeLeading } from './takeLeading';
+
+
+test('takeLeading()', () => {
+  type AppAction1 = { type: 'TEST_ACTION_ONE'; payload: string };
+  type AppAction2 = { type: 'TEST_ACTION_TWO'; payload: number };
+  type AppAction  =
+    | AppAction1
+    | AppAction2;
+
+  type Assert<T extends 1> = T;
+
+  test('*: match any action', () => {
+    function * testSaga() {
+      const takeLeading = makeTakeLeading<AppAction>();
+      const yieldResult = yield * takeLeading(
+        '*',
+        (event: AppAction) => {
+          type assert = Assert<Equals<AppAction, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+
+  test('with a type predicate', () => {
+    function * testSaga() {
+      const takeLeading = makeTakeLeading<AppAction>();
+      const yieldResult = yield * takeLeading(
+        (action => action.type === 'TEST_ACTION_ONE'), (event) => {
+          type assert = Assert<Equals<AppAction1, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+
+  test('with a string', () => {
+    function * testSaga() {
+      const takeLeading = makeTakeLeading<AppAction>();
+      const yieldResult = yield * takeLeading(
+        'TEST_ACTION_ONE',
+        (event) => {
+          type assert = Assert<Equals<AppAction1, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+
+  test('with an array of strings', () => {
+    function * testSaga() {
+      const takeLeading = makeTakeLeading<AppAction>();
+      const yieldResult = yield * takeLeading(
+        ['TEST_ACTION_ONE', 'TEST_ACTION_TWO'],
+        (event) => {
+          type assert = Assert<Equals<AppAction1 | AppAction2, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+
+  test('with a Channel', () => {
+    function * testSaga() {
+      const takeLeading = makeTakeLeading<AppAction>();
+      const channel = RS.channel(RS.buffers.none<AppAction>());
+      const yieldResult = yield * takeLeading(
+        channel,
+        (event) => {
+          type assert = Assert<Equals<AppAction, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+
+  test('with a `toString()`-able object', () => {
+    function * testSaga() {
+      const takeLeading = makeTakeLeading<AppAction>();
+      const yieldResult = yield * takeLeading(
+        { toString: () => 'TEST_ACTION_ONE' as const },
+        (event) => {
+          type assert = Assert<Equals<AppAction1, typeof event>>
+        }
+      );
+
+      type assert = Assert<Equals<undefined, typeof yieldResult>>
+    }
+  })
+});
+
+        ]]></File>
+    <File path="src/takeLeading.js"><![CDATA[
+          import { takeLeading as _takeLeading } from 'redux-saga/effects';
+import { createWrappedGenerator } from './Utils';
+
+export const makeTakeLeading = () => createWrappedGenerator(_takeLeading)
+
+        ]]></File>
+    <File path="src/types.ts"><![CDATA[
+          import { Simplify } from "./Utils";
+import * as RSE from 'redux-saga/effects';
+
+export type AppAction =
+  | TestActionOne
+  | TestActionTwo;
+
+export type TestActionOne = { type: 'TEST_ACTION_ONE'; payload: string };
+export type TestActionTwo = { type: 'TEST_ACTION_TWO'; payload: number };
+
+export type AppActionType    = AppAction['type'];
+export type AppActionPayload = AppAction['payload'];
+
+export type ActionFromPattern<P extends string, AppEvent> =
+  AppEvent extends { type: P }
+  ? AppEvent
+  : never;
+
+export type ActionTypePayloadDict<T extends AppActionType> = 
+  Simplify<{ [K in T]: AppActionPayload }>;
+
+export type SagaGenerator<RT, E extends RSE.Effect = RSE.Effect<any, any>> = Generator<
+  E,
+  RT
+>;
+
+
+        ]]></File>
+    <File path="src/Utils.d.ts"><![CDATA[
+          import * as RS from 'redux-saga';
+import * as RSE from 'redux-saga/effects';
+
+export type ChannelEvent<Channel extends RS.Channel<any>> =
+  Channel extends RS.Channel<infer Payload>
+    ? Payload
+    : never;
+
+export type EventLookup<
+  Event     extends RS.Action<any>,
+  EventType extends Event['type']
+> = Extract<Event, { type: EventType }>;
+
+export type SagaGenerator<RT, E extends RSE.Effect = RSE.Effect<any, any>> = Generator<
+  E,
+  RT
+>;
+
+export type Simplify<T> = T extends infer U
+                          ? { [K in keyof U]: U[K] }
+                          : never
+
+/** We'll manually type everything so who cares the type, we just need to
+ *  be able to import this from other files */
+export function createWrappedGenerator(
+  originalGenerator: any
+): any
+
+        ]]></File>
+    <File path="src/takeEvery.d.ts"><![CDATA[
+          import * as RS from 'redux-saga';
+import * as RSE from 'redux-saga/effects';
+
+import { ChannelEvent } from './Utils';
+import { EventLookup, SagaGenerator } from './Utils';
+
+declare const makeTakeEvery: makeTakeEvery;
+
+type EventDict<Event, EventType> =
+  Event extends { type: EventType }
+    ? Event
+    : never;
+
+declare interface makeTakeEvery {
+  <Event extends RS.Action>(): {
+    /** Match any action */
+    (
+      pattern: '*',
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Constraining signature for predicates */
+    <Ev extends Event>(
+      fn: (action: Event) => action is Ev,
+      fn: (action: Ev) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Expansive signature for predicates */
+    (
+      fn: (action: Event) => boolean,
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    // TODO: List of Type Predicates? But its a useless overload? Is it?
+
+    /** Match single string */
+    <EventType extends Event['type']>(
+      pattern: EventType,
+      fn: (action: EventDict<Event, EventType>) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Match array of strings */
+    <EventType extends Event['type']>(
+      pattern: [...EventType[]],
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Constraining signature for strings AND predicates */
+    <EventType extends Event['type']>(
+      pattern: [...(EventType | ((action: Event) => action is Simplify<Event & { type: EventType }>))[]],
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Fallback expansive signature for strings AND predicates */
+    (
+      pattern: [...(EventType | ((action: Event) => boolean))[]],
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Constraining `toString()` signature */
+    <Obj extends { toString: () => Event['type'] }>(
+      pattern: Obj,
+      fn: (action: EventDict<Event, ReturnType<Obj['toString']>>) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Expansive toString() signature */
+    (
+      pattern: { toString: () => string },
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Constraining signature for Channels */
+    <Channel extends RS.Channel>(
+      channel: Channel,
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Fallback expansive signature for Channels */
+    (
+      channel: RS.Channel,
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+  }
+}
+
+
+        ]]></File>
+    <File path="src/takeLeading.d.ts"><![CDATA[
+          import * as RS from 'redux-saga';
+import * as RSE from 'redux-saga/effects';
+
+import { ChannelEvent } from './Utils';
+import { EventLookup, SagaGenerator } from './Utils';
+
+declare const makeTakeLeading: makeTakeLeading;
+
+type EventDict<Event, EventType> =
+  Event extends { type: EventType }
+    ? Event
+    : never;
+
+declare interface makeTakeLeading {
+  <Event extends RS.Action>(): {
+    /** Match any action */
+    (
+      pattern: '*',
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>
+
+    /** Constraining signature for predicates */
+    <Ev extends Event>(
+      fn: (action: Event) => action is Ev,
+      fn: (action: Ev) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Expansive signature for predicates */
+    (
+      fn: (action: Event) => boolean,
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    // TODO: List of Type Predicates? But its a useless overload? Is it?
+
+    /** Match single string */
+    <EventType extends Event['type']>(
+      pattern: EventType,
+      fn: (action: EventDict<Event, EventType>) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Match array of strings */
+    <EventType extends Event['type']>(
+      pattern: [...EventType[]],
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Constraining signature for strings AND predicates */
+    <EventType extends Event['type']>(
+      pattern: [...(EventType | ((action: Event) => action is Simplify<Event & { type: EventType }>))[]],
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Fallback expansive signature for strings AND predicates */
+    (
+      pattern: [...(EventType | ((action: Event) => boolean))[]],
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Constraining `toString()` signature */
+    <Obj extends { toString: () => Event['type'] }>(
+      pattern: Obj,
+      fn: (action: EventDict<Event, ReturnType<Obj['toString']>>) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Expansive toString() signature */
+    (
+      pattern: { toString: () => string },
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Constraining signature for Channels */
+    <Channel extends RS.Channel>(
+      channel: Channel,
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+
+    /** Fallback expansive signature for Channels */
+    (
+      channel: RS.Channel,
+      fn: (action: Event) => SagaGenerator
+    ): SagaGenerator<undefined, RSE.ForkEffect<never>>;
+  }
+}
+
+
+        ]]></File>
+    <File path="src/Utils.js"><![CDATA[
+          export function createWrappedGenerator(originalGenerator) {
+  return function * (...args) { return yield originalGenerator(...args); };
+}
+
+        ]]></File>
+    <File path="src/takeEvery.js"><![CDATA[
+          import { takeEvery as _takeEvery } from 'redux-saga/effects';
+import { createWrappedGenerator } from './Utils';
+
+export const makeTakeEvery = () => createWrappedGenerator(_takeEvery)
+
+        ]]></File>
+    <File path="src/index.d.ts"><![CDATA[
+          export { makeTake } from './take';
+export { makeTakeEvery } from './takeEvery';
+export { makeTakeLatest } from './takeLatest';
+export { makeTakeLeading } from './takeLeading';
+
+        ]]></File>
+    <File path="src/take.d.ts"><![CDATA[
+          import * as RS from 'redux-saga';
+import * as RSE from 'redux-saga/effects';
+import { ChannelEvent } from './Utils';
+import { EventLookup, SagaGenerator } from './Utils';
+
+declare const makeTake: makeTake;
+
+/**
+ * take(pattern)
+ *
+ * Creates an Effect description that instructs the middleware to wait
+ * for a specified action on the Store.
+ *
+ * The Generator is suspended until an action that matches pattern is dispatched.
+ *
+ * The result of yield take(pattern) is an action object being dispatched.
+ *
+ * pattern is interpreted using the following rules:
+ *
+ * - [x]
+ *   If take is called with no arguments or '*'
+ *   all dispatched actions are matched (e.g. take() will match all actions)
+ *
+ * - [x]
+ * If it is a function, the action is matched
+ * if pattern(action) is true (e.g. take(action => action.entities)
+ * will match all actions having a (truthy) entities field.)
+ *
+ * - [x]
+ * Note: if the pattern function has toString defined on it,
+ * action.type will be tested against pattern.toString() instead.
+ * This is useful if you're using an action creator library like redux-act or redux-actions.
+ *
+ * - [x]
+ * If it is a String, the action is matched
+ * if action.type === pattern (e.g. take(INCREMENT_ASYNC))
+ *
+ * - [ ] TODO: Unimplemented
+ * If it is an array, each item in the array is matched with
+ * aforementioned rules, so the mixed array of strings and function
+ * predicates is supported. The most common use case is an array of strings though,
+ * so that action.type is matched against all items in the array (e.g. take([INCREMENT, DECREMENT])
+ * and that would match either actions of type INCREMENT or DECREMENT).
+ *
+ * The middleware provides a special action END. If you dispatch the END action,
+ * then all Sagas blocked on a take Effect will be terminated regardless of the
+ * specified pattern. If the terminated Saga has still some forked tasks
+ * which are still running, it will wait for all the child tasks
+ * to terminate before terminating the Task.
+ */
+// TODO: Can I deduplicate some fallbacks?
+declare interface makeTake {
+  <Event extends RS.Action>(): {
+    /** Match any action */
+    (pattern: '*'): SagaGenerator<Event, RSE.TakeEffect>;
+
+    /** Constraining signature for predicates */
+    <Ev extends Event>(fn: (action: Event) => action is Ev): SagaGenerator<Ev, RSE.TakeEffect>;
+
+    /** Expansive signature for predicates */
+    (fn: (action: Event) => boolean): SagaGenerator<EventType, RSE.TakeEffect>;
+
+    // TODO: List of Type Predicates? But its a useless overload!
+
+    /** Match single string */
+    <EventType extends Event['type']>(pattern: EventType):
+      SagaGenerator<EventLookup<Event, EventType>, RSE.TakeEffect>;
+
+    /** Match array of strings */
+    <EventType extends Event['type']>(pattern: [...EventType[]]):
+      SagaGenerator<EventLookup<Event, EventType>, RSE.TakeEffect>;
+
+    /** Constraining signature for strings AND predicates */
+    <EventType extends Event['type']>(pattern: [...(EventType | ((action: Event) => action is Simplify<Event & { type: EventType }>))[]]):
+      SagaGenerator<EventLookup<Event, EventType>, RSE.TakeEffect>;
+
+    /** Fallback expansive signature for strings AND predicates */
+    (pattern: [...(EventType | ((action: Event) => boolean))[]]):
+      SagaGenerator<EventLookup<Event, EventType>, RSE.TakeEffect>;
+
+    /** Constraining `toString()` signature */
+    <Obj extends { toString: () => ET }>(pattern: Obj):
+      SagaGenerator<EventLookup<Event, ReturnType<Obj['toString']>>, RSE.TakeEffect>;
+
+    /** Expansive toString() signature */
+    (pattern: { toString: () => string }): SagaGenerator<EventType, RSE.TakeEffect>;
+
+    /** Constraining signature for Channels */
+    <Channel extends RS.Channel>(channel: Channel):
+      SagaGenerator<ChannelEvent<Channel>, RSE.TakeEffect>;
+
+    /** Fallback expansive signature for Channels */
+    (channel: RS.Channel): SagaGenerator<ChannelEvent<Channel>, RSE.TakeEffect>;
+  }
+}
+
+        ]]></File>
+    <File path="src/take.js"><![CDATA[
+          import { take as _take } from 'redux-saga/effects';
+import { createWrappedGenerator } from './Utils';
+
+export const makeTake = () => createWrappedGenerator(_take)
+
+        ]]></File>
+  </Directory>
+</SourceCodeTree>
